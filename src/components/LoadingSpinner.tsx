@@ -7,7 +7,7 @@ type Props = {
 function LoadingSpinner({ isLoading }: Props) {
   return isLoading ? (
     <div className="loading-container">
-      <img src={logo} className="loading-spinner" alt="loading spinner" />
+      <img src={logo} className="spinner" alt="loading spinner" />
     </div>
   ) : null
 }

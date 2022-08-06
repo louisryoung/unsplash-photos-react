@@ -9,7 +9,7 @@ header {
   gap: 1rem;
 }
 
-.logo {
+header .logo {
   height: 4.5rem;
   pointer-events: none;
 }
@@ -25,12 +25,12 @@ main {
   padding: 3rem;
 }
 
-.loading-spinner {
+.loading-container .spinner {
   height: 5rem;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .loading-spinner {
+  .loading-container .spinner {
     animation: spin infinite 2s linear;
   }
 }
