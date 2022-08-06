@@ -32,25 +32,42 @@ type Photo = {
 }
 
 function App() {
-  const [photos, setPhotos] = React.useState<Photo[] | null>(null)
+  const [photos, setPhotos] = React.useState<Photo[]>([])
   const [isLoading, setIsLoading] = React.useState(false)
+  const [page, setPage] = React.useState(1)
+
+  React.useEffect(() => {
+    window.addEventListener('scroll', handleScroll, true)
+
+    return window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   // TODO: Implement Custom Hook
   React.useEffect(() => {
     ;(async function () {
       try {
         setIsLoading(true)
-        const { response: photos } = await unsplashApi.photos.getRandom({
+        const { response } = await unsplashApi.photos.getRandom({
           count: 12,
         })
-        setPhotos(photos as unknown as Photo[])
+        setPhotos((photos) => [...photos, ...(response as unknown as Photo[])])
       } catch (err) {
         console.error(err)
       } finally {
         setIsLoading(false)
       }
     })()
-  }, [])
+  }, [page])
+
+  function handleScroll() {
+    const { documentElement } = document
+    var winScroll = documentElement.scrollTop
+    var height = documentElement.scrollHeight - documentElement.clientHeight
+    console.log(winScroll, height)
+    if (winScroll === height) {
+      setPage((page) => ++page)
+    }
+  }
 
   return (
     <>
