@@ -1,1 +1,1 @@
-export const accessKey = process.env.ACCESS_KEY as string
+export const accessKey = process.env.REACT_APP_ACCESS_KEY ?? ''
