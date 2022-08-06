@@ -1,35 +1,45 @@
 header {
   background-color: #272e3b;
-  min-height: 80px;
+  min-height: 6rem;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  font-size: 40px;
-  gap: 15px;
+  font-size: 3rem;
+  gap: 1rem;
 }
 
 .logo {
-  height: 60px;
+  height: 4.5rem;
   pointer-events: none;
 }
 
+main {
+  min-height: calc(100vh - 6rem);
+  background-color: #4d5158;
+}
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.loading-spinner {
+  height: 5rem;
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  .logo {
-    animation: App-logo-spin infinite 3s linear;
+  .loading-spinner {
+    animation: spin infinite 2s linear;
   }
 }
 
-@keyframes App-logo-spin {
+@keyframes spin {
   from {
     transform: rotate(0deg);
   }
   to {
     transform: rotate(360deg);
   }
-}
-
-main {
-  min-height: calc(100vh - 80px);
-  background-color: #4d5158;
 }
