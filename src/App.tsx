@@ -1,42 +1,16 @@
 import * as React from 'react'
-import Gallery from 'react-photo-gallery'
-import ReactBnbGallery from 'react-bnb-gallery'
+import Gallery, {
+  PhotoProps as MasonryPhoto,
+  PhotoClickHandler,
+} from 'react-photo-gallery'
+import ReactBnbGallery, { Photo as LightboxPhoto } from 'react-bnb-gallery'
 
 import { Header } from './components/Header'
 import { LoadingSpinner } from './components/LoadingSpinner'
-import { unsplashApi } from './utils/api'
+import { getRandomPhotos } from './api'
 
 import 'react-bnb-gallery/dist/style.css'
 import './styles/App.css'
-
-type ResponsePhoto = {
-  id: string
-  width: number
-  height: number
-  description: string
-  alt_description: string
-  urls: {
-    thumb: string
-    small: string
-  }
-}
-
-type MasonryPhoto = {
-  width: number
-  height: number
-  key: string
-  src: string
-  alt: string
-}
-
-type LightboxPhoto = {
-  number: number
-  key: string
-  photo: string
-  thumbnail: string
-  caption: string
-  subcaption: string
-}
 
 function App() {
   const [masonryPhotos, setMasonryPhotos] = React.useState<MasonryPhoto[]>([])
@@ -45,13 +19,23 @@ function App() {
   )
   const [isLoading, setIsLoading] = React.useState(false)
   const [page, setPage] = React.useState(1)
-  const [currentImage, setCurrentImage] = React.useState(0)
-  const [isOpen, setIsOpen] = React.useState(false)
+  const [currentLightboxIndex, setCurrentLightboxIndex] = React.useState<
+    number | null
+  >(null)
 
   React.useEffect(() => {
+    function handleScroll() {
+      const { documentElement } = document
+      const winScroll = documentElement.scrollTop
+      const height = documentElement.scrollHeight - documentElement.clientHeight
+      if (winScroll === height) {
+        setPage((page) => page + 1)
+      }
+    }
+
     window.addEventListener('scroll', handleScroll, true)
 
-    return window.removeEventListener('scroll', handleScroll)
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   // TODO: Implement Custom Hook
@@ -59,18 +43,8 @@ function App() {
     ;(async function () {
       try {
         setIsLoading(true)
-        const { response } = (await unsplashApi.photos.getRandom({
-          count: 12,
-          topicIds: [
-            '6sMVjTLSkeQ',
-            'rnSKDHwwYUk',
-            'CDwuwXJAbEw',
-            'bo8jQKTaE0Y',
-            'iUIsnVtjB0Y',
-            'aeu6rL-j6ew',
-          ],
-        })) as unknown as { response: ResponsePhoto[] }
-        const nextMasonryPhotos = response.map(
+        const photos = await getRandomPhotos()
+        const nextMasonryPhotos = photos.map(
           ({ id, urls, width, height, alt_description }) => ({
             width,
             height,
@@ -79,11 +53,11 @@ function App() {
             alt: alt_description || 'Unsplash image',
           })
         )
-        setMasonryPhotos((previousPhotos) => [
-          ...previousPhotos,
+        setMasonryPhotos((previousMasonryPhotos) => [
+          ...previousMasonryPhotos,
           ...nextMasonryPhotos,
         ])
-        const nextLightboxPhotos = response.map(
+        const nextLightboxPhotos = photos.map(
           ({ id, urls, description, alt_description }, i) => ({
             number: i,
             key: id,
@@ -93,8 +67,8 @@ function App() {
             subcaption: alt_description,
           })
         )
-        setLightboxPhotos((previousPhotos) => [
-          ...previousPhotos,
+        setLightboxPhotos((previousLightboxPhotos) => [
+          ...previousLightboxPhotos,
           ...nextLightboxPhotos,
         ])
       } catch (err) {
@@ -105,51 +79,27 @@ function App() {
     })()
   }, [page])
 
-  const openLightbox = React.useCallback(
-    (
-      event: React.MouseEvent,
-      {
-        photo,
-        index,
-      }: {
-        photo: {
-          src: string
-          height: number
-          width: number
-        }
-        index: number
-      }
-    ) => {
-      setCurrentImage(index)
-      setIsOpen(true)
+  const handleOpenLightbox: PhotoClickHandler = React.useCallback(
+    (_event, { index }) => {
+      setCurrentLightboxIndex(index)
     },
     []
   )
 
-  const closeLightbox = () => {
-    setCurrentImage(0)
-    setIsOpen(false)
-  }
-
-  function handleScroll() {
-    const { documentElement } = document
-    var winScroll = documentElement.scrollTop
-    var height = documentElement.scrollHeight - documentElement.clientHeight
-    if (winScroll === height) {
-      setPage((page) => ++page)
-    }
+  const handleCloseLightbox = () => {
+    setCurrentLightboxIndex(null)
   }
 
   return (
     <>
       <Header></Header>
       <main>
-        <Gallery photos={masonryPhotos} onClick={openLightbox} />
+        <Gallery photos={masonryPhotos} onClick={handleOpenLightbox} />
         <ReactBnbGallery
-          show={isOpen}
+          show={!!currentLightboxIndex}
           photos={lightboxPhotos}
-          onClose={closeLightbox}
-          activePhotoIndex={currentImage}
+          onClose={handleCloseLightbox}
+          activePhotoIndex={currentLightboxIndex ?? undefined}
         />
         <LoadingSpinner isLoading={isLoading}></LoadingSpinner>
       </main>
