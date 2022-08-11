@@ -1,25 +1,22 @@
 import * as React from 'react'
-import Gallery, {
-  PhotoProps as MasonryPhoto,
-  PhotoClickHandler,
-} from 'react-photo-gallery'
-import ReactBnbGallery, { Photo as LightboxPhoto } from 'react-bnb-gallery'
+import { observer } from 'mobx-react-lite'
+import Gallery, { PhotoClickHandler } from 'react-photo-gallery'
+import ReactBnbGallery from 'react-bnb-gallery'
 import { useInView } from 'react-intersection-observer'
 import classNames from 'classnames'
 
 import { Header } from './components/Header'
-import { getRandomPhotos } from './api'
 import logo from './logo.svg'
+import { PhotoStore } from './store/photos'
 
 import 'react-bnb-gallery/dist/style.css'
 import './styles/App.css'
 
-function App() {
-  const [masonryPhotos, setMasonryPhotos] = React.useState<MasonryPhoto[]>([])
-  const [lightboxPhotos, setLightboxPhotos] = React.useState<LightboxPhoto[]>(
-    []
-  )
-  const [isLoading, setIsLoading] = React.useState(false)
+type Props = {
+  store: PhotoStore
+}
+
+function AppComponent({ store }: Props) {
   const [page, setPage] = React.useState(1)
   const [currentLightboxIndex, setCurrentLightboxIndex] = React.useState<
     number | null
@@ -30,44 +27,8 @@ function App() {
 
   // TODO: Implement Custom Hook
   React.useEffect(() => {
-    ;(async function () {
-      try {
-        setIsLoading(true)
-        const photos = await getRandomPhotos()
-        const nextMasonryPhotos = photos.map(
-          ({ id, urls, width, height, alt_description }) => ({
-            width,
-            height,
-            key: id,
-            src: urls.thumb,
-            alt: alt_description || 'Unsplash image',
-          })
-        )
-        setMasonryPhotos((previousMasonryPhotos) => [
-          ...previousMasonryPhotos,
-          ...nextMasonryPhotos,
-        ])
-        const nextLightboxPhotos = photos.map(
-          ({ id, urls, description, alt_description }, i) => ({
-            number: i,
-            key: id,
-            photo: urls.small,
-            thumbnail: urls.thumb,
-            caption: description,
-            subcaption: alt_description,
-          })
-        )
-        setLightboxPhotos((previousLightboxPhotos) => [
-          ...previousLightboxPhotos,
-          ...nextLightboxPhotos,
-        ])
-      } catch (err) {
-        console.error(err)
-      } finally {
-        setIsLoading(false)
-      }
-    })()
-  }, [page])
+    store.getPhotos()
+  }, [page, store])
 
   React.useEffect(() => {
     if (inView) {
@@ -90,16 +51,18 @@ function App() {
     <>
       <Header></Header>
       <main>
-        <Gallery photos={masonryPhotos} onClick={handleOpenLightbox} />
+        <Gallery photos={store.masonryPhotos} onClick={handleOpenLightbox} />
         <ReactBnbGallery
           show={!!currentLightboxIndex}
-          photos={lightboxPhotos}
+          photos={store.lightboxPhotos}
           onClose={handleCloseLightbox}
           activePhotoIndex={currentLightboxIndex ?? undefined}
         />
         <div
           ref={ref}
-          className={classNames('loading-container', { 'd-none': !isLoading })}
+          className={classNames('loading-container', {
+            'd-none': !store.isLoading,
+          })}
         >
           <img src={logo} className="spinner" alt="loading spinner" />
         </div>
@@ -107,5 +70,7 @@ function App() {
     </>
   )
 }
+
+const App = observer(AppComponent)
 
 export { App }

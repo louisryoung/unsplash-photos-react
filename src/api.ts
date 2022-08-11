@@ -2,7 +2,7 @@ import { createApi } from 'unsplash-js'
 
 import { accessKey } from './config'
 
-type Photo = {
+export type Photo = {
   id: string
   width: number
   height: number
