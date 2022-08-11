@@ -4,10 +4,12 @@ import Gallery, {
   PhotoClickHandler,
 } from 'react-photo-gallery'
 import ReactBnbGallery, { Photo as LightboxPhoto } from 'react-bnb-gallery'
+import { useInView } from 'react-intersection-observer'
+import classNames from 'classnames'
 
 import { Header } from './components/Header'
-import { LoadingSpinner } from './components/LoadingSpinner'
 import { getRandomPhotos } from './api'
+import logo from './logo.svg'
 
 import 'react-bnb-gallery/dist/style.css'
 import './styles/App.css'
@@ -22,21 +24,9 @@ function App() {
   const [currentLightboxIndex, setCurrentLightboxIndex] = React.useState<
     number | null
   >(null)
-
-  React.useEffect(() => {
-    function handleScroll() {
-      const { documentElement } = document
-      const winScroll = documentElement.scrollTop
-      const height = documentElement.scrollHeight - documentElement.clientHeight
-      if (winScroll === height) {
-        setPage((page) => page + 1)
-      }
-    }
-
-    window.addEventListener('scroll', handleScroll, true)
-
-    return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  const { ref, inView } = useInView({
+    threshold: 0.9,
+  })
 
   // TODO: Implement Custom Hook
   React.useEffect(() => {
@@ -79,6 +69,12 @@ function App() {
     })()
   }, [page])
 
+  React.useEffect(() => {
+    if (inView) {
+      setPage((page) => page + 1)
+    }
+  }, [inView])
+
   const handleOpenLightbox: PhotoClickHandler = React.useCallback(
     (_event, { index }) => {
       setCurrentLightboxIndex(index)
@@ -101,7 +97,12 @@ function App() {
           onClose={handleCloseLightbox}
           activePhotoIndex={currentLightboxIndex ?? undefined}
         />
-        <LoadingSpinner isLoading={isLoading}></LoadingSpinner>
+        <div
+          ref={ref}
+          className={classNames('loading-container', { 'd-none': !isLoading })}
+        >
+          <img src={logo} className="spinner" alt="loading spinner" />
+        </div>
       </main>
     </>
   )
