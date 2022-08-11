@@ -1,8 +1,8 @@
 import * as React from 'react'
+import { fromEvent } from 'rxjs'
 import { observer } from 'mobx-react-lite'
 import Gallery, { PhotoClickHandler } from 'react-photo-gallery'
 import ReactBnbGallery from 'react-bnb-gallery'
-import { useInView } from 'react-intersection-observer'
 import classNames from 'classnames'
 
 import { Header } from './components/Header'
@@ -21,20 +21,20 @@ function AppComponent({ store }: Props) {
   const [currentLightboxIndex, setCurrentLightboxIndex] = React.useState<
     number | null
   >(null)
-  const { ref, inView } = useInView({
-    threshold: 0.9,
+
+  fromEvent(document, 'scroll').subscribe((e) => {
+    const { documentElement } = e.target as Document
+    var winScroll = documentElement.scrollTop
+    var height = documentElement.scrollHeight - documentElement.clientHeight
+
+    if (winScroll === height) {
+      setPage((page) => ++page)
+    }
   })
 
-  // TODO: Implement Custom Hook
   React.useEffect(() => {
     store.getPhotos()
   }, [page, store])
-
-  React.useEffect(() => {
-    if (inView) {
-      setPage((page) => page + 1)
-    }
-  }, [inView])
 
   const handleOpenLightbox: PhotoClickHandler = React.useCallback(
     (_event, { index }) => {
@@ -59,7 +59,6 @@ function AppComponent({ store }: Props) {
           activePhotoIndex={currentLightboxIndex ?? undefined}
         />
         <div
-          ref={ref}
           className={classNames('loading-container', {
             'd-none': !store.isLoading,
           })}
