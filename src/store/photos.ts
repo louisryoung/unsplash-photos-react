@@ -42,7 +42,8 @@ export class PhotoStore {
       const photos = await getRandomPhotos()
       this.addPhotos(photos)
     } catch (err) {
-      console.error(err)
+      const { message } = err as Error
+      alert(message)
     } finally {
       this.setIsLoading(false)
     }
