@@ -22,15 +22,21 @@ function AppComponent({ store }: Props) {
     number | null
   >(null)
 
-  fromEvent(document, 'scroll').subscribe((e) => {
-    const { documentElement } = e.target as Document
-    var winScroll = documentElement.scrollTop
-    var height = documentElement.scrollHeight - documentElement.clientHeight
+  React.useEffect(() => {
+    const scrollSubscription = fromEvent(document, 'scroll').subscribe((e) => {
+      const { documentElement } = e.target as Document
+      var winScroll = documentElement.scrollTop
+      var height = documentElement.scrollHeight - documentElement.clientHeight
 
-    if (winScroll === height) {
-      setPage((page) => ++page)
+      if (winScroll === height) {
+        setPage((page) => ++page)
+      }
+    })
+
+    return () => {
+      scrollSubscription.unsubscribe()
     }
-  })
+  }, [])
 
   React.useEffect(() => {
     store.getPhotos()
